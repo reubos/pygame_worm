@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pygame, random, shelve
+import pygame, random, shelve, sys, os
 
 save_game = shelve.open('save')
 highscore = save_game.get('highscore')
@@ -238,3 +238,4 @@ while running:
     clock.tick(maxfps)
 
 pygame.quit()
+sys.exit()
