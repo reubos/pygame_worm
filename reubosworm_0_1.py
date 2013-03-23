@@ -27,8 +27,8 @@ hud_thickness = 20
 pygame.font.init()
 score_font = pygame.font.Font("ShareTechMono-Regular.ttf",hud_font_size)
 
-s = raw_input("Diffculty (1-3): ")
-if 0<int(s) and int(s) <4:
+s = raw_input("Diffculty (1-4): ")
+if 0<int(s) and int(s) <5:
     difficulty = int(s)
 else:
     difficulty = 1
@@ -36,6 +36,8 @@ if difficulty == 1:
     worm_length = 30 #Initial worm size
     worm_growrate = 0 # Worm grows once per given ticks (higher = slower)
     wormspeed = 1
+    wormaccelerate = 0
+    worm_accelerate_on_eat = 100
     worm_grow_on_eat = 25
     number_of_obstacles = 0
     starting_lives = 3
@@ -44,6 +46,8 @@ elif difficulty == 2:
     worm_length = 40
     worm_growrate = 150
     wormspeed = 2
+    wormaccelerate = 0
+    worm_accelerate_on_eat = 20
     worm_grow_on_eat = 50
     number_of_obstacles = 2
     starting_lives = 2
@@ -52,6 +56,18 @@ elif difficulty == 3:
     worm_length = 40
     worm_growrate = 100
     wormspeed = 3
+    wormaccelerate = 0
+    worm_accelerate_on_eat = 10
+    worm_grow_on_eat = 100
+    number_of_obstacles = 5
+    starting_lives = 0
+    maxfps = 300
+elif difficulty == 4:
+    worm_length = 40
+    worm_growrate = 10
+    wormspeed = 3
+    wormaccelerate = 1000
+    worm_accelerate_on_eat = 10
     worm_grow_on_eat = 100
     number_of_obstacles = 5
     starting_lives = 0
@@ -189,10 +205,12 @@ chomp = pygame.mixer.Sound("chomp.wav")
 oh_no = pygame.mixer.Sound("oh_no.wav")
 
 def game_init():
-    global score, j, lives, w1, f1, obspos
+    global score, j, ac, fc, lives, w1, f1, obspos
     screen.fill(bgcolour)
     score = 0
     j = 0
+    ac = 0
+    fc = 0
     lives = starting_lives
     w1 = Worm(screen, width/2, height/2, worm_length, wormcolour, wormspeed)
     f1 = Food(screen, foodcolour)
@@ -204,9 +222,11 @@ def game_init():
     pygame.time.delay(2000)
 
 def new_life():
-    global j, w1, f1, obspos
+    global j, ac, fc, w1, f1, obspos
     screen.fill(bgcolour)
     j = 0
+    ac = 0
+    fc = 0
     w1 = Worm(screen, width/2, height/2, worm_length, wormcolour, wormspeed)
     f1 = Food(screen, foodcolour)
     f1.draw()
@@ -219,11 +239,15 @@ def new_life():
 game_init()
 while running:
     pygame.draw.rect(screen,hudcolour,(0,0,width,hud_thickness))
+    pygame.draw.rect(screen,hudcolour,(0,0,5,height))
+    pygame.draw.rect(screen,hudcolour,(width-5,0,5,height))
+    pygame.draw.rect(screen,hudcolour,(0,height-5,width,5))
     score_text = score_font.render("Score:"+str(score), False, hud_font_colour)
     lives_text = score_font.render("Lives:"+str(lives), False, hud_font_colour)
     screen.blit(score_text, (0,0))
     screen.blit(lives_text, (width-80,0))
     j+=1
+    ac+=1
     
 ##    screen.fill(bgcolour)
     for i in obspos:
@@ -234,8 +258,10 @@ while running:
     w1.move()
     if food:
         if w1.eating:
+            fc+=1
+            if (fc%worm_accelerate_on_eat==0):w1.speed += 1
             score+=1
-            print "Score: %d" % score
+##            print "Score: %d" % score
             chomp.play()
             f1.erase()
             f1.move()
@@ -243,6 +269,8 @@ while running:
 
     if worm_growrate != 0:
         if (j%worm_growrate==0): w1.grow_to += 1
+    if wormaccelerate != 0:
+        if (ac%wormaccelerate==0): w1.speed += 1
 
     if w1.crashed or w1.pos[0]<=0 or w1.pos[0]>=width-1 or \
        w1.pos[1]<=0 or w1.pos[1]>=height-1:
