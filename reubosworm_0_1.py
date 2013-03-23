@@ -125,20 +125,16 @@ class Worm:
     def key_event(self, event):
         """ Handle key events that affect the worm. """
         if event.key == pygame.K_UP:
-            if self.speedvec == (0,self.speed): return
-            self.speedvec = (0,-self.speed)
+            if self.dir == DOWN: return
             self.dir = UP
         elif event.key == pygame.K_DOWN:
-            if self.speedvec == (0,-self.speed): return
-            self.speedvec = (0,self.speed)
+            if self.dir == UP: return
             self.dir = DOWN
         elif event.key == pygame.K_LEFT:
-            if self.speedvec == (self.speed,0): return
-            self.speedvec = (-self.speed,0)
+            if self.dir == RIGHT: return
             self.dir = LEFT
         elif event.key == pygame.K_RIGHT:
-            if self.speedvec == (-self.speed,0): return
-            self.speedvec = (self.speed,0)
+            if self.dir == LEFT: return
             self.dir = RIGHT
 
     def move(self):
