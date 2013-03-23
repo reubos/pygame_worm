@@ -109,15 +109,19 @@ class Worm:
     def key_event(self, event):
         """ Handle key events that affect the worm. """
         if event.key == pygame.K_UP:
-            self.dir_x= 0
+            if self.dir_y == 1: return
+            self.dir_x = 0
             self.dir_y = -1
         elif event.key == pygame.K_DOWN:
+            if self.dir_y == -1: return
             self.dir_x = 0
             self.dir_y = 1
         elif event.key == pygame.K_LEFT:
+            if self.dir_x == 1: return
             self.dir_x = -1
             self.dir_y = 0
         elif event.key == pygame.K_RIGHT:
+            if self.dir_x == -1: return
             self.dir_x = 1
             self.dir_y = 0
 
