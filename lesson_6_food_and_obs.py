@@ -81,7 +81,7 @@ class Food:
 
     def draw(self):
         pygame.draw.rect(self.surface, self.colour,\
-                         pygame.Rect(self.pos[0],self.pos[1],10,10))
+                         (self.pos[0],self.pos[1],11,11), 0)
                                
 
 
@@ -192,9 +192,7 @@ while running:
     
     screen.fill(bgcolour)
     for i in obspos:
-        for k in range(-5,6):
-            for l in range(-5,6):
-                screen.set_at((i[0]+k,i[1]+l),(obscolour))
+        pygame.draw.rect(screen,obscolour,(i[0],i[1],11,11),0)
     if food: f1.draw()
     w1.draw()
     w1.move()
