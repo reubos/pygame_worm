@@ -75,13 +75,12 @@ class Food:
                 if self.surface.get_at((self.pos[0]+i,self.pos[1]+k))\
                    !=bgcolour:
                     self.move()
-                    print "Redrawn at"
-                    print self.pos
+                    print "Redrawn at" + str(self.pos)
                     return
 
     def draw(self):
         pygame.draw.rect(self.surface, self.colour,\
-                         (self.pos[0],self.pos[1],11,11), 0)
+                         (self.pos[0],self.pos[1],11,11))
 
     def erase(self):
         pygame.draw.rect(self.surface, bgcolour, (self.pos[0], self.pos[1], \
@@ -112,26 +111,24 @@ class Worm:
 
     def key_event(self, event):
         """ Handle key events that affect the worm. """
-        if event.key == pygame.K_UP:
-            if self.dir_y == 1: return
-            self.dir_x = 0
-            self.dir_y = -1
-        elif event.key == pygame.K_DOWN:
-            if self.dir_y == -1: return
-            self.dir_x = 0
-            self.dir_y = 1
-        elif event.key == pygame.K_LEFT:
-            if self.dir_x == 1: return
-            self.dir_x = -1
-            self.dir_y = 0
+        x,y = (self.dir_x, self.dir_y)
+##        if event.key == pygame.K_UP:
+##            if self.dir_y == 1: return
+##            self.dir_x = 0
+##            self.dir_y = -1
+##        elif event.key == pygame.K_DOWN:
+##            if self.dir_y == -1: return
+##            self.dir_x = 0
+##            self.dir_y = 1
+        if event.key == pygame.K_LEFT:
+            self.dir_x = y
+            self.dir_y = -x
         elif event.key == pygame.K_RIGHT:
-            if self.dir_x == -1: return
-            self.dir_x = 1
-            self.dir_y = 0
+            self.dir_x = -y
+            self.dir_y = x
 
     def move(self):
         """ Move the worm. """
-        self.eating=False
         self.x += self.dir_x
         self.y += self.dir_y
 
@@ -163,6 +160,9 @@ class Worm:
 
     def eat(self):
         self.grow_to += worm_grow_on_eat
+
+    def sethungry(self):
+        self.eating = False
 
 
 
@@ -208,7 +208,7 @@ while running:
     
 ##    screen.fill(bgcolour)
     for i in obspos:
-        pygame.draw.rect(screen,obscolour,(i[0],i[1],11,11),0)
+        pygame.draw.rect(screen,obscolour,(i[0],i[1],11,11))
 ##    if food: f1.draw()
     if len(w1.body) > 0:
         w1.draw()
@@ -221,6 +221,7 @@ while running:
             f1.erase()
             f1.move()
             f1.draw()
+    w1.sethungry()
 
     if worm_growrate != 0:
         if (j%worm_growrate==0): w1.grow_to += 1
