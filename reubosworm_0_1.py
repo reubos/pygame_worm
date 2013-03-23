@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import pygame, random, shelve, sys, os
+from vector2d import *
 
 save_game = shelve.open('save')
 highscore = save_game.get('highscore')
@@ -34,6 +35,7 @@ else:
 if difficulty == 1:
     worm_length = 30 #Initial worm size
     worm_growrate = 0 # Worm grows once per given ticks (higher = slower)
+    wormspeed = 1
     worm_grow_on_eat = 25
     number_of_obstacles = 0
     starting_lives = 3
@@ -41,6 +43,7 @@ if difficulty == 1:
 elif difficulty == 2:
     worm_length = 40
     worm_growrate = 150
+    wormspeed = 2
     worm_grow_on_eat = 50
     number_of_obstacles = 2
     starting_lives = 2
@@ -48,6 +51,7 @@ elif difficulty == 2:
 elif difficulty == 3:
     worm_length = 40
     worm_growrate = 100
+    wormspeed = 3
     worm_grow_on_eat = 100
     number_of_obstacles = 5
     starting_lives = 0
@@ -104,15 +108,15 @@ class Food:
 class Worm:
     """ A worm. """
 
-    def __init__(self, surface, x, y, length,colour):
+    def __init__(self, surface, x, y, length,colour,speed):
         """ Creates a moving pixel. """
         self.surface = surface
-        self.x = x
-        self.y = y
+        self.pos = (x,y)
         self.length = 1
         self.grow_to = length
-        self.dir_x = 0
-        self.dir_y = -1
+        self.speed = speed
+        self.speedvec = (0,-speed)
+        self.dir = UP
         self.body =[]
         self.crashed = False
         self.eating = False
@@ -121,29 +125,31 @@ class Worm:
     def key_event(self, event):
         """ Handle key events that affect the worm. """
         if event.key == pygame.K_UP:
-            if self.dir_y == 1: return
-            self.dir_x = 0
-            self.dir_y = -1
+            if self.speedvec == (0,self.speed): return
+            self.speedvec = (0,-self.speed)
+            self.dir = UP
         elif event.key == pygame.K_DOWN:
-            if self.dir_y == -1: return
-            self.dir_x = 0
-            self.dir_y = 1
+            if self.speedvec == (0,-self.speed): return
+            self.speedvec = (0,self.speed)
+            self.dir = DOWN
         elif event.key == pygame.K_LEFT:
-            if self.dir_x == 1: return
-            self.dir_x = -1
-            self.dir_y = 0
+            if self.speedvec == (self.speed,0): return
+            self.speedvec = (-self.speed,0)
+            self.dir = LEFT
         elif event.key == pygame.K_RIGHT:
-            if self.dir_x == -1: return
-            self.dir_x = 1
-            self.dir_y = 0
+            if self.speedvec == (-self.speed,0): return
+            self.speedvec = (self.speed,0)
+            self.dir = RIGHT
 
     def move(self):
         """ Move the worm. """
         self.eating=False
-        self.x += self.dir_x
-        self.y += self.dir_y
 
-        r,g,b,a = self.surface.get_at((self.x, self.y))
+        for i in range(0,self.speed):
+            self.pos = tuple(sum(t) for t in zip(self.pos,self.dir))
+            self.body.insert(0, self.pos)
+            
+        r,g,b,a = self.surface.get_at(self.pos)
         if (r,g,b) == wormcolour or (r,g,b) == obscolour or \
            (r,g,b) == hudcolour:
             self.crashed = True
@@ -151,21 +157,24 @@ class Worm:
             self.eating=True
             self.grow_to += worm_grow_on_eat
 
-        self.body.insert(0, (self.x, self.y))
+
 
         if (self.grow_to > self.length):
-            self.length += 1
+            self.length += self.speed
 
         if len(self.body) > self.length:
-            self.body.pop()
+            for i in range(0,self.speed):
+                self.body.pop()
 
     def draw(self):
 ##        for x,y in self.body:
 ##            self.surface.set_at((x, y), self.colour)
-        x,y = (self.x,self.y)
-        self.surface.set_at((x,y), self.colour)
-        x,y = self.body[-1]
-        self.surface.set_at((x,y), bgcolour)
+        for x,y in self.body[:self.speed]:
+            #print "pixel at " + str(x) + "," + str(y)
+            self.surface.set_at((x,y), self.colour)
+        for x,y in self.body[-self.speed:]:
+            #print "pixel removed at " + str(x) + "," + str(y)
+            self.surface.set_at((x,y), bgcolour)
 
     def position(self):
         return self.x,self.y
@@ -189,7 +198,7 @@ def game_init():
     score = 0
     j = 0
     lives = starting_lives
-    w1 = Worm(screen, width/2, height/2, worm_length, wormcolour)
+    w1 = Worm(screen, width/2, height/2, worm_length, wormcolour, wormspeed)
     f1 = Food(screen, foodcolour)
     f1.draw()
     obspos=[]
@@ -202,7 +211,7 @@ def new_life():
     global j, w1, f1, obspos
     screen.fill(bgcolour)
     j = 0
-    w1 = Worm(screen, width/2, height/2, worm_length, wormcolour)
+    w1 = Worm(screen, width/2, height/2, worm_length, wormcolour, wormspeed)
     f1 = Food(screen, foodcolour)
     f1.draw()
     obspos=[]
@@ -239,7 +248,8 @@ while running:
     if worm_growrate != 0:
         if (j%worm_growrate==0): w1.grow_to += 1
 
-    if w1.crashed or w1.x<=0 or w1.x>=width-1 or w1.y<=0 or w1.y>=height-1:
+    if w1.crashed or w1.pos[0]<=0 or w1.pos[0]>=width-1 or \
+       w1.pos[1]<=0 or w1.pos[1]>=height-1:
         print "Crash!"
         oh_no.play()
         if lives == 0:
