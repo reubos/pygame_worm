@@ -70,8 +70,8 @@ class Food:
     def move(self):
         self.pos=(int(random.random() * 3*width/5 + width/5),\
                  int(random.random() * 3*height/5 + height/5))
-        for i in range(0,6):
-            for k in range(0,6):
+        for i in range(0,11):
+            for k in range(0,11):
                 if self.surface.get_at((self.pos[0]+i,self.pos[1]+k))\
                    !=bgcolour:
                     self.move()
