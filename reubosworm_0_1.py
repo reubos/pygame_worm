@@ -8,7 +8,13 @@ highscore = save_game.get('highscores') # load highscore for easy
 if highscore == None:
     highscore = [0,0,0,0]
     save_game['highscores'] = [0,0,0,0]
-    
+# Import the difficulty choice
+difficulty = save_game.get('difficulty')
+if difficulty == None:
+    difficulty = 2
+    save_game['difficulty'] = 2
+
+
 save_game.close
 
 ##print highscore
@@ -47,11 +53,6 @@ maxfps = 80
 pygame.font.init()
 score_font = pygame.font.Font(hud_font,hud_font_size)
 
-s = raw_input("Diffculty (1-4): ")
-if 0<int(s) and int(s) <5:
-    difficulty = int(s)
-else:
-    difficulty = 1
 if difficulty == 1:
     worm_length = 30 # Initial worm size
     worm_growrate = 0 # Worm grows once per given ticks (higher = slower)
@@ -100,7 +101,6 @@ highscore_colour = 255,0,0
 
 class Menu:
     """ The menu. """
-
     def __init__(self, surface, colour, font, title_font, size, title_size,\
                  highscore_colour):
         """ Initialises the menu """
@@ -139,8 +139,10 @@ class Menu:
         self.alive = True
 
     def disp_options(self):
+        global difficulty
         self.surface.fill(bgcolour)
 
+        print difficulty
         score_colour = [self.colour,self.colour,self.colour,self.colour]
         score_colour[difficulty-1] = self.highscore_colour
         options_title_text = self.title_font.render(\
@@ -165,6 +167,7 @@ class Menu:
         pygame.display.flip()
 
     def disp_highscores(self):
+        global difficulty
 ##        print "disp_hs_loaded"
         self.surface.fill(bgcolour)
         score_colour = [self.colour,self.colour,self.colour,self.colour]
@@ -214,21 +217,35 @@ class Menu:
         pygame.display.flip()
 
     def key_event(self, event):
+        global difficulty
         """ Handle key events that affect the worm. """
-        if event.key == pygame.K_SPACE:
+        if event.key == pygame.K_SPACE and self.on_screen == "Main":
             self.alive = False
-        elif event.key == pygame.K_h:
+        elif event.key == pygame.K_h and self.on_screen == "Main":
             self.disp_highscores()
             self.on_screen = "Highscores"
         elif event.key == pygame.K_b:
             self.draw()
             self.on_screen = "Main"
-        elif event.key == pygame.K_o:
+        elif event.key == pygame.K_o and self.on_screen == "Main":
             self.disp_options()
             self.on_screen = "Options"
         elif event.key == pygame.K_ESCAPE:
             pygame.quit()
             sys.exit()
+        elif event.key == pygame.K_1 and self.on_screen == "Options":
+            difficulty = 1
+            print difficulty
+            self.disp_options()
+        elif event.key == pygame.K_2 and self.on_screen == "Options":
+            difficulty = 2
+            self.disp_options()
+        elif event.key == pygame.K_3 and self.on_screen == "Options":
+            difficulty = 3
+            self.disp_options()
+        elif event.key == pygame.K_4 and self.on_screen == "Options":
+            difficulty = 4
+            self.disp_options()
 
     def set_alive(self, boolval):
         self.alive = boolval
@@ -355,19 +372,14 @@ chomp = pygame.mixer.Sound("chomp.wav") # The eating food sound
 oh_no = pygame.mixer.Sound("oh_no.wav") # The crash sound
 
 def game_init():
-    global score, j, ac, fc, lives, w1, f1, obspos, menu, new_highscore
-    score = 0
-    j = 0
-    ac = 0
-    fc = 0
-    lives = starting_lives
-    w1 = Worm(screen, width/2, height/2, worm_length, wormcolour, wormspeed)
-    f1 = Food(screen, foodcolour)
+    global score, j, ac, fc, lives, w1, f1, obspos, menu, new_highscore,\
+           difficulty, worm_length, worm_growrate, wormspeed, wormaccelerate,\
+           worm_accelerate_on_eat, worm_grow_on_eat, number_of_obstacles,\
+           starting_lives
     menu = Menu(screen, menu_font_colour, menu_font, \
                 menu_title_font, menu_font_size, menu_title_font_size,\
                 highscore_colour)
     menu.draw()
-##    print "menu drawn"
     while menu.alive:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -377,6 +389,50 @@ def game_init():
                 menu.key_event(event)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 print event.pos
+    if difficulty == 1:
+        worm_length = 30 # Initial worm size
+        worm_growrate = 0 # Worm grows once per given ticks (higher = slower)
+        wormspeed = 1 # The starting speed of the worm (pixels/tick)
+        wormaccelerate = 0 # Worm accelerates one per given ticks
+        worm_accelerate_on_eat = 100 # Worm accelerates after given amount of food
+        worm_grow_on_eat = 25 # Worm grows by given amount of pixels on eating
+        number_of_obstacles = 0 # Given number of obstacles appear on screen
+        starting_lives = 3 # Worm has chances to die and start over
+    elif difficulty == 2:
+        worm_length = 40
+        worm_growrate = 150
+        wormspeed = 2
+        wormaccelerate = 0
+        worm_accelerate_on_eat = 20
+        worm_grow_on_eat = 50
+        number_of_obstacles = 2
+        starting_lives = 2
+    elif difficulty == 3:
+        worm_length = 40
+        worm_growrate = 100
+        wormspeed = 3
+        wormaccelerate = 0
+        worm_accelerate_on_eat = 10
+        worm_grow_on_eat = 100
+        number_of_obstacles = 5
+        starting_lives = 0
+    elif difficulty == 4:
+        worm_length = 40
+        worm_growrate = 10
+        wormspeed = 3
+        wormaccelerate = 1000
+        worm_accelerate_on_eat = 10
+        worm_grow_on_eat = 100
+        number_of_obstacles = 5
+        starting_lives = 0
+        print "Harder diff loaded"
+    score = 0
+    j = 0
+    ac = 0
+    fc = 0
+    lives = starting_lives
+    w1 = Worm(screen, width/2, height/2, worm_length, wormcolour, wormspeed)
+    f1 = Food(screen, foodcolour)
     screen.fill(bgcolour)
     f1.draw()
     obspos=[]
@@ -384,6 +440,7 @@ def game_init():
         obspos.append((int(random.random() * 3*width/5 + width/5),\
                        int(random.random() * 3*height/5 + height/5)))
     new_highscore = False
+
 ##    pygame.time.delay(2000)
 
 def new_life():
